@@ -1,122 +1,73 @@
-START
-  ↓
-[1] Define Financial Setup
-  ├── Strike Price (K)
-  ├── Risk-Free Rate (r)
-  ├── Time to Maturity (T)
-  └── Volatility Range (σ)
-  ↓
-  (These define the Black–Scholes environment)
+PINN-Based Option Pricing (Black–Scholes PDE)
+🧠 Overview
 
-  ↓
-[2] Generate Training Data (Crucial Step)
-  ├── Interior Points (Collocation Points)
-  │     • S_interior → Asset prices sampled in domain
-  │     • t_interior → Time sampled in (0, T)
-  │     • σ_interior → Volatility samples
-  │
-  ├── Terminal Points (Maturity Condition)
-  │     • S_terminal
-  │     • t_terminal = T
-  │     • Enforces payoff:
-  │         max(S - K, 0)
-  │
-  ├── Boundary Points
-  │     • S → 0  (Option value → 0)
-  │     • S → large (Option behaves ~ S - K)
-  │
-  ↓
-  (Dataset is physics-driven, NOT labeled data)
+This project implements a Physics-Informed Neural Network (PINN) to solve the Black–Scholes Partial Differential Equation (PDE) for European option pricing.
+Instead of relying on traditional numerical methods, the model learns the solution by enforcing the governing PDE and financial constraints directly within the loss function.
 
-  ↓
-[3] Define Neural Network (PINN)
-  ├── Input Layer:
-  │     (S, t, σ)
-  │
-  ├── Hidden Layers:
-  │     Fully connected layers with activation (tanh/relu)
-  │
-  ├── Output Layer:
-  │     V(S, t) → Option price
-  │
-  ↓
-  (Model approximates continuous pricing function)
+🚀 Key Features
+📊 Solves Black–Scholes PDE using deep learning
+🧮 No grid-based discretization required
+⚙️ Physics-informed loss (PDE + boundary + terminal conditions)
+📈 Comparison with analytical Black–Scholes solution
+🔁 Hybrid optimization (Adam + L-BFGS)
+🌐 Generalization across different volatility regimes
+⚙️ Problem Formulation
 
-  ↓
-[4] Forward Pass
-  ├── Pass all inputs through network
-  └── Get predicted prices V̂(S, t)
+The model approximates the option pricing function:
 
-  ↓
-[5] Compute Derivatives using Autograd
-  ├── ∂V/∂t
-  ├── ∂V/∂S
-  └── ∂²V/∂S²
-  ↓
-  (Required to enforce PDE)
+Input: Asset Price (S), Time (t), Volatility (σ)
+Output: Option Price 
+V(S,t)
 
-  ↓
-[6] Construct Loss Function (Core of PINN)
-  ├── [A] PDE Residual Loss
-  │     • Enforces:
-  │       ∂V/∂t + (1/2)σ²S² ∂²V/∂S² + rS ∂V/∂S - rV = 0
-  │     • Computed at interior points
-  │
-  ├── [B] Terminal Loss
-  │     • Ensures:
-  │       V(S, T) = max(S - K, 0)
-  │
-  ├── [C] Boundary Loss
-  │     • S → 0 ⇒ V ≈ 0
-  │     • S → ∞ ⇒ V ≈ S - K
-  │
-  ├── Total Loss:
-  │     Loss = PDE + Terminal + Boundary
-  │
-  ↓
-  (This replaces traditional supervised learning)
+The Black–Scholes equation is enforced through the loss function along with:
 
-  ↓
-[7] Backpropagation
-  ├── Compute gradients of loss
-  └── Update network weights
+Terminal payoff condition
+Boundary conditions
+🏗️ Project Workflow
+1. Financial Setup
+Define parameters: Strike price (K), risk-free rate (r), maturity (T), volatility (σ)
+2. Data Generation (Physics-Based)
+Interior Points: Enforce PDE
+Terminal Points: Enforce payoff 
+V(S,T)=max(S−K,0)
+Boundary Points: Ensure financial constraints
+3. Model Architecture
+Fully connected neural network
+Input: (S, t, σ)
+Output: Option price
+4. Training Process
+Forward pass to compute predictions
+Automatic differentiation for PDE derivatives
+Loss computation:
+PDE residual loss
+Terminal loss
+Boundary loss
+5. Optimization
+Adam optimizer for initial training
+L-BFGS optimizer for fine-tuning
+6. Evaluation
+Compare predictions with analytical Black–Scholes solution
+Analyze errors across different scenarios
+7. Visualization
+Option price vs asset price
+Time evolution
+Volatility sensitivity
+3D price surfaces
+📊 Results
+Accurate approximation of Black–Scholes solution
+Stable performance across multiple volatility regimes
+Smooth continuous pricing function learned by the network
+🧩 Tech Stack
+Python
+PyTorch
+NumPy
+Matplotlib
+🔮 Future Improvements
+Extend to American options
+Incorporate stochastic volatility models (Heston)
+Multi-asset option pricing
+Calibration using real market data
+💡 Key Insight
 
-  ↓
-[8] Optimization Strategy
-  ├── Phase 1: Adam Optimizer
-  │     • Fast initial convergence
-  │
-  ├── Phase 2: L-BFGS Optimizer
-  │     • Fine-tuning for precision
-  │
-  ↓
-  (Hybrid optimization improves stability)
-
-  ↓
-[9] Model Convergence Check
-  ├── Loss stabilization
-  ├── PDE residual minimization
-  └── Visual sanity checks
-
-  ↓
-[10] Analytical Benchmarking
-  ├── Compute exact Black–Scholes solution
-  ├── Compare:
-  │     • Predicted vs Exact
-  │     • Error metrics
-  ↓
-
-[11] Visualization & Analysis
-  ├── Option price vs Asset Price (S)
-  ├── Time evolution plots
-  ├── Volatility sensitivity (σ)
-  ├── Surface plots (S, t → V)
-  ↓
-
-[12] Insights & Validation
-  ├── Accuracy across regimes
-  ├── Stability of training
-  └── Generalization capability
-
-  ↓
-END
+Unlike traditional supervised learning, this model does not require labeled data.
+It learns by minimizing the violation of the governing PDE and financial constraints.
